@@ -2,7 +2,7 @@ import argv
 import gleam/io
 import gleam/result
 import gleam/string
-import gleamyshell
+import shellout
 import simplifile
 
 import internal/utils
@@ -10,9 +10,12 @@ import internal/utils
 pub fn main() {
   let assert Ok(current_folder) = simplifile.current_directory()
   let assert Ok(files) = simplifile.read_directory(current_folder)
-  let assert Ok(command) =
-    utils.get_command_from_lockfile(files) |> gleamyshell.which
+  let command = utils.get_command_from_lockfile(files)
   let args = argv.load().arguments
-  let assert Ok(output) = gleamyshell.execute(command, in: ".", args:)
-  io.println(output.output)
+
+  let assert Ok(_) =
+    shellout.command(command, with: args, in: current_folder, opt: [
+      shellout.LetBeStdout,
+      shellout.LetBeStderr,
+    ])
 }
